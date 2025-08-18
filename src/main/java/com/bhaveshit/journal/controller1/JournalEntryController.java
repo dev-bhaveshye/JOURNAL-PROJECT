@@ -15,6 +15,7 @@ public class JournalEntryController {
         return true;
     }
 
+
     @GetMapping()
     public HashMap<Long, JournalEntry> getJournalEntryHashMap() {
         return journalEntryHashMap;
