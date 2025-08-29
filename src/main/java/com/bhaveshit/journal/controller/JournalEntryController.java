@@ -2,8 +2,10 @@ package com.bhaveshit.journal.controller;
 
 
 import com.bhaveshit.journal.entity.JournalEntry;
+import com.bhaveshit.journal.entity.User;
 import com.bhaveshit.journal.repository.JournalEntryRepository;
 import com.bhaveshit.journal.service.JournalEntryService;
+import com.bhaveshit.journal.service.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,12 +24,13 @@ public class JournalEntryController {
     private JournalEntryRepository journalEntryRepository;
     @Autowired
     private JournalEntryService journalEntryService;
+    @Autowired
+    private UserService userService;
 
-    @PostMapping
-    public ResponseEntity<JournalEntry> save(@RequestBody JournalEntry journalEntry) {
+    @PostMapping("/username/{username}")
+    public ResponseEntity<JournalEntry> save(@RequestBody JournalEntry journalEntry , @PathVariable String username) {
         try{
-            journalEntry.setDate(LocalDateTime.now());
-            journalEntryRepository.save(journalEntry);
+            journalEntryService.save(journalEntry , username);
             return new ResponseEntity<>(journalEntry, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -35,14 +38,19 @@ public class JournalEntryController {
 
 
     }
-    @GetMapping
-    public  ResponseEntity<List<JournalEntry>> getJournalEntry() {
 
-        List<JournalEntry> journalEntry = journalEntryService.getAll();
-        if(!journalEntry.isEmpty()) {
-            return new ResponseEntity<>(journalEntry, HttpStatus.OK);
+    @GetMapping("username/{username}")
+    public ResponseEntity<?> getJournalEntriesByUsername(@PathVariable String username) {
+        User user = userService.getByUsername(username);
+        List<JournalEntry> all = user.getJournalEntries();
+
+
+        if(all!=null && !all.isEmpty()){
+            return new ResponseEntity<>(all , HttpStatus.OK);
+
         }
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
     }
 
 
@@ -58,9 +66,9 @@ public class JournalEntryController {
 
     }
 
-    @DeleteMapping("id/{myId}")
-    public ResponseEntity<Object> deleteJournalEntry(@PathVariable ObjectId myId) {
-        journalEntryRepository.deleteById(myId);
+    @DeleteMapping("id/{username}/{myId}")
+    public ResponseEntity<Object> deleteJournalEntry(@PathVariable ObjectId myId , @PathVariable String username) {
+        journalEntryService.deleteById(username , myId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

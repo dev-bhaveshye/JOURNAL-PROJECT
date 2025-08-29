@@ -1,11 +1,13 @@
 package com.bhaveshit.journal.service;
 
 import com.bhaveshit.journal.entity.JournalEntry;
+import com.bhaveshit.journal.entity.User;
 import com.bhaveshit.journal.repository.JournalEntryRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -13,8 +15,19 @@ public class JournalEntryService {
     @Autowired
     private JournalEntryRepository journalEntryRepository;
 
-    public void save(JournalEntry journalEntry) {
-        journalEntryRepository.save(journalEntry);
+    @Autowired
+    private UserService userService;
+
+    public void save(JournalEntry journalEntry , String username) {
+        try {
+            User user = userService.getByUsername(username);
+            journalEntry.setDate(LocalDateTime.now());
+            JournalEntry saved = journalEntryRepository.save(journalEntry);
+            user.getJournalEntries().add(saved);
+            userService.save(user);
+        }catch(RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public List<JournalEntry> getAll(){
@@ -25,7 +38,10 @@ public class JournalEntryService {
         return journalEntryRepository.findById(id).orElse(null);
     }
 
-    public void deleteById(ObjectId id){
+    public void deleteById(String username, ObjectId id){
+        User user = userService.getByUsername(username);
+        user.getJournalEntries().removeIf(journalEntries ->journalEntries.getId().equals(id));
+        userService.save(user);
         journalEntryRepository.deleteById(id);
     }
 
