@@ -6,6 +6,7 @@ import com.bhaveshit.journal.repository.JournalEntryRepository;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +19,7 @@ public class JournalEntryService {
     @Autowired
     private UserService userService;
 
+    @Transactional
     public void save(JournalEntry journalEntry , String username) {
         try {
             User user = userService.getByUsername(username);
@@ -26,7 +28,7 @@ public class JournalEntryService {
             user.getJournalEntries().add(saved);
             userService.save(user);
         }catch(RuntimeException e) {
-            System.out.println(e.getMessage());
+            throw new RuntimeException("Error saving journal entry" , e);
         }
     }
 

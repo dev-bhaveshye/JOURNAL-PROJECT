@@ -27,6 +27,7 @@ public class JournalEntryController {
     @Autowired
     private UserService userService;
 
+
     @PostMapping("/username/{username}")
     public ResponseEntity<JournalEntry> save(@RequestBody JournalEntry journalEntry , @PathVariable String username) {
         try{
